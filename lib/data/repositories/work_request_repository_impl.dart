@@ -4,13 +4,13 @@ import '../../domain/models/work_request.dart';
 import '../../domain/repositories/repositories.dart';
 import '../local/database.dart';
 import '../local/tables/work_requests_table.dart';
-import '../remote/firebase/firestore_service.dart';
 
+/// Реализация репозитория заявок, работающая только с локальной БД (Drift).
+/// Все операции выполняются мгновенно и без удалённых вызовов.
 class WorkRequestRepositoryImpl implements WorkRequestRepository {
-  WorkRequestRepositoryImpl(this._db, this._firestore);
+  WorkRequestRepositoryImpl(this._db);
 
   final AppDatabase _db;
-  final FirestoreService _firestore;
 
   @override
   Stream<List<WorkRequest>> watchAll() =>
@@ -21,10 +21,6 @@ class WorkRequestRepositoryImpl implements WorkRequestRepository {
       .watchByUser(userId)
       .map((r) => r.map(_fromRow).toList());
 
-  @override
-  Stream<List<WorkRequest>> watchPendingModeration() => _db.workRequestDao
-      .watchByStatus(RequestStatus.needsModeration.name)
-      .map((r) => r.map(_fromRow).toList());
 
   @override
   Future<List<WorkRequest>> getPendingSyncBatch({int limit = 10}) async {
@@ -40,23 +36,7 @@ class WorkRequestRepositoryImpl implements WorkRequestRepository {
   @override
   Future<void> update(WorkRequest request) async {
     await _db.workRequestDao.insertOrUpdate(_toCompanion(request));
-    try {
-      await _firestore.upsertWorkRequest(request);
-    } catch (_) {}
-  }
-
-  @override
-  Future<void> markModerationDecision({
-    required String requestId,
-    required bool approved,
-  }) async {
-    final rows = await _db.workRequestDao.getPendingSyncBatch(limit: 1000);
-    final target = rows.where((r) => r.id == requestId).firstOrNull;
-    if (target == null) return;
-    final updated = _fromRow(target).copyWith(
-      status: approved ? RequestStatus.approved : RequestStatus.rejected,
-    );
-    await update(updated);
+    // Удалённая синхронизация пока отключена (будет добавлена позже с бэкендом)
   }
 
   WorkRequest _fromRow(WorkRequestsTableData r) => WorkRequest(

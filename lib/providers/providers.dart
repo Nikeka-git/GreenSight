@@ -1,17 +1,17 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';   // <-- было riverpod
-
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/network/connectivity_service.dart';
-import '../core/services/sync_service.dart';               // путь исправлен
+import '../core/services/sync_service.dart';
+import '../core/auth/local_user_service.dart';
+import '../core/location/location_service.dart';
 import '../data/local/database.dart';
 import '../data/remote/ai/ai_api_client.dart';
-import '../data/remote/firebase/firestore_service.dart';
-import '../data/remote/firebase/photo_storage_service.dart';
+import '../data/remote/s3/imgbb_upload_service.dart';
 import '../data/repositories/tree_repository_impl.dart';
 import '../data/repositories/work_request_repository_impl.dart';
+import '../domain/models/work_request.dart';
 import '../domain/repositories/repositories.dart';
+
+// ===== SINGLETONS =====
 
 final databaseProvider = Provider<AppDatabase>((ref) {
   return AppDatabase();
@@ -21,12 +21,16 @@ final connectivityServiceProvider = Provider<ConnectivityService>((ref) {
   return ConnectivityService();
 });
 
-final firestoreServiceProvider = Provider<FirestoreService>((ref) {
-  return FirestoreService(FirebaseFirestore.instance);
+final localUserServiceProvider = Provider<LocalUserService>((ref) {
+  return LocalUserService();
 });
 
-final photoStorageServiceProvider = Provider<PhotoStorageService>((ref) {
-  return PhotoStorageService(FirebaseStorage.instance);
+final locationServiceProvider = Provider<LocationService>((ref) {
+  return LocationService();
+});
+
+final uploadServiceProvider = Provider<ImgBBUploadService>((ref) {
+  return ImgBBUploadService(apiKey: 'ваш_ключ_заглушка');
 });
 
 final aiApiClientProvider = Provider<AiApiClient>((ref) {
@@ -35,21 +39,19 @@ final aiApiClientProvider = Provider<AiApiClient>((ref) {
   );
 });
 
-final firebaseAuthProvider = Provider<FirebaseAuth>((ref) {
-  return FirebaseAuth.instance;
-});
+// ===== REPOSITORIES =====
 
 final treeRepositoryProvider = Provider<TreeRepository>((ref) {
   final db = ref.watch(databaseProvider);
-  final firestore = ref.watch(firestoreServiceProvider);
-  return TreeRepositoryImpl(db, firestore);
+  return TreeRepositoryImpl(db);
 });
 
 final workRequestRepositoryProvider = Provider<WorkRequestRepository>((ref) {
   final db = ref.watch(databaseProvider);
-  final firestore = ref.watch(firestoreServiceProvider);
-  return WorkRequestRepositoryImpl(db, firestore);
+  return WorkRequestRepositoryImpl(db);
 });
+
+// ===== SYNC SERVICE =====
 
 final syncServiceProvider = Provider<SyncService>((ref) {
   final service = SyncService(
@@ -57,11 +59,17 @@ final syncServiceProvider = Provider<SyncService>((ref) {
     workRequestRepo: ref.watch(workRequestRepositoryProvider),
     treeRepo: ref.watch(treeRepositoryProvider),
     aiClient: ref.watch(aiApiClientProvider),
-    photoStorage: ref.watch(photoStorageServiceProvider),
-    firestore: ref.watch(firestoreServiceProvider),
-    auth: ref.watch(firebaseAuthProvider),
+    uploadService: ref.watch(uploadServiceProvider),
+    localUserService: ref.watch(localUserServiceProvider),
   );
   service.start();
   ref.onDispose(service.dispose);
   return service;
+});
+
+// ===== STREAMS ДЛЯ UI =====
+
+final myRequestsProvider = StreamProvider.autoDispose<List<WorkRequest>>((ref) async* {
+  final userId = await ref.watch(localUserServiceProvider).getUserId();
+  yield* ref.watch(workRequestRepositoryProvider).watchByUser(userId);
 });

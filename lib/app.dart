@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'router/app_router.dart';
 
 class App extends ConsumerWidget {
@@ -9,9 +8,9 @@ class App extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp.router(
-      routerConfig: router,
       title: 'GreenSight',
-      theme: ThemeData.light(),
+      theme: ThemeData(primarySwatch: Colors.green),
+      routerConfig: router,
     );
   }
 }

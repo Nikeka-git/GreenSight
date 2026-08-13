@@ -1,6 +1,5 @@
-import '../enums/domain_enums.dart';
-import '../models/inspection.dart';
 import '../models/tree.dart';
+import '../models/inspection.dart';
 import '../models/work_request.dart';
 
 abstract class TreeRepository {
@@ -15,9 +14,7 @@ abstract class TreeRepository {
 abstract class WorkRequestRepository {
   Stream<List<WorkRequest>> watchAll();
   Stream<List<WorkRequest>> watchByUser(String userId);
-  Stream<List<WorkRequest>> watchPendingModeration();
   Future<List<WorkRequest>> getPendingSyncBatch({int limit});
   Future<void> createLocal(WorkRequest request);
   Future<void> update(WorkRequest request);
-  Future<void> markModerationDecision({required String requestId, required bool approved});
 }

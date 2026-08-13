@@ -1,11 +1,10 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../network/connectivity_service.dart';
+import '../auth/local_user_service.dart';
 import '../../data/remote/ai/ai_api_client.dart';
 import '../../data/remote/ai/ai_result.dart';
-import '../../data/remote/firebase/firestore_service.dart';
-import '../../data/remote/firebase/photo_storage_service.dart';
+import '../../data/remote/s3/imgbb_upload_service.dart';
 import '../../domain/enums/domain_enums.dart';
 import '../../domain/models/tree.dart';
 import '../../domain/models/work_request.dart';
@@ -16,20 +15,18 @@ class SyncService {
   SyncService({
     required this.connectivity,
     required this.workRequestRepo,
-    required this.treeRepo,
+    required this.treeRepo,                    // <-- добавляем
     required this.aiClient,
-    required this.photoStorage,
-    required this.firestore,
-    required this.auth,
+    required this.uploadService,
+    required this.localUserService,
   });
 
   final ConnectivityService connectivity;
   final WorkRequestRepository workRequestRepo;
-  final TreeRepository treeRepo;
+  final TreeRepository treeRepo;               // <-- добавляем поле
   final AiApiClient aiClient;
-  final PhotoStorageService photoStorage;
-  final FirestoreService firestore;
-  final FirebaseAuth auth;
+  final ImgBBUploadService uploadService;
+  final LocalUserService localUserService;
 
   Timer? _syncTimer;
   bool _isSyncing = false;
@@ -37,14 +34,9 @@ class SyncService {
 
   void start() {
     _connectivitySubscription = connectivity.onStatusChange.listen((isOnline) {
-      if (isOnline) {
-        _scheduleSync();
-      }
+      if (isOnline) _scheduleSync();
     });
-    _syncTimer = Timer.periodic(
-      const Duration(minutes: 5),
-          (_) => _scheduleSync(),
-    );
+    _syncTimer = Timer.periodic(const Duration(minutes: 5), (_) => _scheduleSync());
   }
 
   void dispose() {
@@ -53,29 +45,20 @@ class SyncService {
   }
 
   void _scheduleSync() {
-    if (!_isSyncing) {
-      _sync();
-    }
+    if (!_isSyncing) _sync();
   }
 
   Future<void> _sync() async {
     if (_isSyncing) return;
     _isSyncing = true;
-
     try {
-      final isOnline = await connectivity.isOnline;
-      if (!isOnline) return;
-
+      if (!await connectivity.isOnline) return;
       final pending = await workRequestRepo.getPendingSyncBatch(limit: 10);
-      if (pending.isEmpty) return;
-
       for (final request in pending) {
         try {
           await _processRequest(request);
-        } catch (e, st) {
+        } catch (e) {
           await _markFailed(request.id, e.toString());
-          // ignore: avoid_print
-          print('Sync error: $e\n$st');
         }
       }
     } finally {
@@ -84,19 +67,21 @@ class SyncService {
   }
 
   Future<void> _processRequest(WorkRequest request) async {
+    // Обновляем статус
     if (request.status == RequestStatus.draftLocal) {
       await workRequestRepo.update(
         request.copyWith(status: RequestStatus.pendingUpload),
       );
     }
 
+    // Загружаем фото
     String? photoUrl = request.remotePhotoUrl;
     if (photoUrl == null || photoUrl.isEmpty) {
       final file = File(request.localPhotoPath);
       if (!await file.exists()) {
         throw Exception('Фото не найдено: ${request.localPhotoPath}');
       }
-      photoUrl = await photoStorage.uploadTreePhoto(
+      photoUrl = await uploadService.uploadPhoto(
         file: file,
         requestId: request.id,
       );
@@ -108,6 +93,7 @@ class SyncService {
       );
     }
 
+    // Отправляем на AI
     final aiResult = await aiClient.analyzePhoto(
       photo: File(request.localPhotoPath),
       latitude: request.latitude,
@@ -115,6 +101,7 @@ class SyncService {
       userProblemCodes: request.userProblems.map((p) => p.name).toList(),
     );
 
+    // Обрабатываем результат
     await _handleAiResult(request, aiResult, photoUrl);
   }
 
@@ -135,8 +122,6 @@ class SyncService {
 
     if (aiResult.matchesUserReport) {
       await _createOrUpdateTree(request, aiResult, photoUrl);
-    } else {
-      await firestore.upsertWorkRequest(updatedRequest);
     }
   }
 

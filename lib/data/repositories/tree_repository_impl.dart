@@ -5,19 +5,13 @@ import '../../domain/models/inspection.dart';
 import '../../domain/repositories/repositories.dart';
 import '../local/database.dart';
 import '../local/tables/trees_table.dart';
-import '../remote/firebase/firestore_service.dart';
 
+/// Реализация репозитория деревьев, работающая только с локальной БД (Drift).
+/// Все операции выполняются синхронно и без удалённых вызовов.
 class TreeRepositoryImpl implements TreeRepository {
-  TreeRepositoryImpl(this._db, this._firestore) {
-    _firestore.watchTrees().listen((trees) async {
-      for (final t in trees) {
-        await _db.treeDao.upsertTree(_toCompanion(t));
-      }
-    });
-  }
+  TreeRepositoryImpl(this._db);
 
   final AppDatabase _db;
-  final FirestoreService _firestore;
 
   @override
   Stream<List<Tree>> watchAllTrees() {
@@ -45,7 +39,6 @@ class TreeRepositoryImpl implements TreeRepository {
   @override
   Future<void> upsertTree(Tree tree) async {
     await _db.treeDao.upsertTree(_toCompanion(tree));
-    await _firestore.upsertTree(tree);
   }
 
   @override
@@ -59,7 +52,6 @@ class TreeRepositoryImpl implements TreeRepository {
       inspectedAt: drift.Value(inspection.inspectedAt),
       inspectorId: drift.Value(inspection.inspectorId),
     ));
-    await _firestore.addInspection(inspection);
   }
 
   @override
