@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/auth/local_user_service.dart';
 import '../core/location/location_service.dart';
 import '../core/network/connectivity_service.dart';
+import '../core/permissions/permission_service.dart';
 import '../core/services/sync_service.dart';
 import '../data/local/database.dart';
 import '../data/remote/api/greensight_api_client.dart';
@@ -12,9 +13,10 @@ import '../domain/models/work_request.dart';
 import '../domain/repositories/repositories.dart';
 
 /// Backend API base URL. Override at build/run time with
+/// `--dart-define=API_URL=http://<host>:3000` (Android emulator: 10.0.2.2).
 const String apiBaseUrl = String.fromEnvironment(
   'API_URL',
-  defaultValue: 'http://192.168.0.110:3000',
+  defaultValue: 'http://localhost:3000',
 );
 
 // ===== SINGLETONS =====
@@ -33,6 +35,10 @@ final localUserServiceProvider = Provider<LocalUserService>((ref) {
 
 final locationServiceProvider = Provider<LocationService>((ref) {
   return LocationService();
+});
+
+final permissionServiceProvider = Provider<PermissionService>((ref) {
+  return PermissionService();
 });
 
 final apiClientProvider = Provider<GreensightApiClient>((ref) {

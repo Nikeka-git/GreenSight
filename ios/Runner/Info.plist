@@ -63,6 +63,8 @@
     <string>Для определения местоположения дерева</string>
     <key>NSLocationAlwaysUsageDescription</key>
     <string>Для определения местоположения дерева</string>
+    <key>NSCameraUsageDescription</key>
+    <string>Для фотографирования деревьев при создании заявки</string>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
