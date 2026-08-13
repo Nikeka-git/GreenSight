@@ -15,7 +15,7 @@ class AiResult {
     required this.condition,
     required this.confidence,
     required this.matchesUserReport,
-    required this.recommendation,
+    this.recommendation,
     required this.suggestedPriority,
   });
 

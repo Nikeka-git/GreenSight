@@ -1,5 +1,4 @@
 import 'package:drift/drift.dart' as drift;
-
 import '../../domain/enums/domain_enums.dart';
 import '../../domain/models/work_request.dart';
 import '../../domain/repositories/repositories.dart';
@@ -35,23 +34,15 @@ class WorkRequestRepositoryImpl implements WorkRequestRepository {
 
   @override
   Future<void> createLocal(WorkRequest request) async {
-    // Пишем ТОЛЬКО в Drift — это ключевое требование офлайн-first: заявка
-    // должна сохраниться мгновенно, без ожидания сети. Firestore получит
-    // копию позже через SyncService.
     await _db.workRequestDao.insertOrUpdate(_toCompanion(request));
   }
 
   @override
   Future<void> update(WorkRequest request) async {
     await _db.workRequestDao.insertOrUpdate(_toCompanion(request));
-    // Пишем в Firestore лучшим усилием — если сети нет, Firestore SDK сам
-    // поставит операцию в свою внутреннюю офлайн-очередь и повторит позже.
-    // Локальная очередь в Drift остаётся основным источником истины для UI.
     try {
       await _firestore.upsertWorkRequest(request);
-    } catch (_) {
-      // не блокируем локальный поток — SyncService повторит на след. тике
-    }
+    } catch (_) {}
   }
 
   @override
@@ -94,21 +85,21 @@ class WorkRequestRepositoryImpl implements WorkRequestRepository {
   );
 
   WorkRequestsTableCompanion _toCompanion(WorkRequest r) =>
-      WorkRequestsTableCompanion.insert(
-        id: r.id,
+      WorkRequestsTableCompanion(
+        id: drift.Value(r.id),
         treeLocalId: drift.Value(r.treeLocalId),
-        localPhotoPath: r.localPhotoPath,
+        localPhotoPath: drift.Value(r.localPhotoPath),
         remotePhotoUrl: drift.Value(r.remotePhotoUrl),
-        latitude: r.latitude,
-        longitude: r.longitude,
-        userProblemsCsv: r.userProblems.map((e) => e.name).join(','),
+        latitude: drift.Value(r.latitude),
+        longitude: drift.Value(r.longitude),
+        userProblemsCsv: drift.Value(r.userProblems.map((e) => e.name).join(',')),
         userComment: drift.Value(r.userComment),
-        status: r.status.name,
+        status: drift.Value(r.status.name),
         aiCondition: drift.Value(r.aiCondition?.name),
         aiConfidence: drift.Value(r.aiConfidence),
         createdByUserId: drift.Value(r.createdByUserId),
-        createdAt: r.createdAt,
-        updatedAt: r.updatedAt,
+        createdAt: drift.Value(r.createdAt),
+        updatedAt: drift.Value(r.updatedAt),
         syncAttempts: drift.Value(r.syncAttempts),
         lastError: drift.Value(r.lastError),
       );

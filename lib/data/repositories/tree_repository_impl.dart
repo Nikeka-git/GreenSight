@@ -1,20 +1,14 @@
 import 'package:drift/drift.dart' as drift;
-
 import '../../domain/enums/domain_enums.dart';
-import '../../domain/models/inspection.dart';
 import '../../domain/models/tree.dart';
+import '../../domain/models/inspection.dart';
 import '../../domain/repositories/repositories.dart';
 import '../local/database.dart';
 import '../local/tables/trees_table.dart';
-import '../local/tables/inspections_table.dart';
 import '../remote/firebase/firestore_service.dart';
 
-/// Источник правды для UI — локальный Drift-кэш (мгновенно, офлайн).
-/// Firestore используется как удалённый бэкенд: слушаем его и зеркалируем
-/// изменения в Drift, а также пишем в него при подтверждении/создании.
 class TreeRepositoryImpl implements TreeRepository {
   TreeRepositoryImpl(this._db, this._firestore) {
-    // Держим локальный кэш синхронным с Firestore, пока есть сеть.
     _firestore.watchTrees().listen((trees) async {
       for (final t in trees) {
         await _db.treeDao.upsertTree(_toCompanion(t));
@@ -51,18 +45,18 @@ class TreeRepositoryImpl implements TreeRepository {
   @override
   Future<void> upsertTree(Tree tree) async {
     await _db.treeDao.upsertTree(_toCompanion(tree));
-    await _firestore.upsertTree(tree); // no-op/queued by SDK if offline
+    await _firestore.upsertTree(tree);
   }
 
   @override
   Future<void> addInspection(Inspection inspection) async {
-    await _db.treeDao.addInspection(InspectionsTableCompanion.insert(
-      id: inspection.id,
-      treeLocalId: inspection.treeLocalId,
-      photoUrl: inspection.photoUrl,
-      aiCondition: inspection.aiCondition.name,
+    await _db.treeDao.addInspection(InspectionsTableCompanion(
+      id: drift.Value(inspection.id),
+      treeLocalId: drift.Value(inspection.treeLocalId),
+      photoUrl: drift.Value(inspection.photoUrl),
+      aiCondition: drift.Value(inspection.aiCondition.name),
       aiConfidence: drift.Value(inspection.aiConfidence),
-      inspectedAt: inspection.inspectedAt,
+      inspectedAt: drift.Value(inspection.inspectedAt),
       inspectorId: drift.Value(inspection.inspectorId),
     ));
     await _firestore.addInspection(inspection);
@@ -101,19 +95,19 @@ class TreeRepositoryImpl implements TreeRepository {
     updatedAt: r.updatedAt,
   );
 
-  TreesTableCompanion _toCompanion(Tree t) => TreesTableCompanion.insert(
-    localId: t.localId,
+  TreesTableCompanion _toCompanion(Tree t) => TreesTableCompanion(
+    localId: drift.Value(t.localId),
     remoteId: drift.Value(t.id),
-    latitude: t.latitude,
-    longitude: t.longitude,
-    category: t.category.name,
-    condition: t.condition.name,
-    status: t.status.name,
+    latitude: drift.Value(t.latitude),
+    longitude: drift.Value(t.longitude),
+    category: drift.Value(t.category.name),
+    condition: drift.Value(t.condition.name),
+    status: drift.Value(t.status.name),
     mainPhotoUrl: drift.Value(t.mainPhotoUrl),
-    lastInspectionDate: t.lastInspectionDate,
+    lastInspectionDate: drift.Value(t.lastInspectionDate),
     recommendation: drift.Value(t.recommendation),
-    priority: t.priority.name,
-    createdAt: t.createdAt,
-    updatedAt: t.updatedAt,
+    priority: drift.Value(t.priority.name),
+    createdAt: drift.Value(t.createdAt),
+    updatedAt: drift.Value(t.updatedAt),
   );
 }

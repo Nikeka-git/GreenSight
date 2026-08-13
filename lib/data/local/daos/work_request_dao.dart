@@ -1,5 +1,4 @@
 import 'package:drift/drift.dart';
-
 import '../database.dart';
 import '../tables/work_requests_table.dart';
 
@@ -25,13 +24,12 @@ class WorkRequestDao extends DatabaseAccessor<AppDatabase>
       (select(workRequestsTable)..where((t) => t.status.equals(status)))
           .watch();
 
-  /// Заявки, ожидающие отправки: черновики, ожидающие загрузки или
-  /// упавшие с ошибкой (для повторной попытки в SyncService).
   Future<List<WorkRequestsTableData>> getPendingSyncBatch({int limit = 10}) {
     return (select(workRequestsTable)
       ..where((t) => t.status.isIn([
         'draftLocal',
         'pendingUpload',
+        'pendingAI',
         'failed',
       ]))
       ..orderBy([(t) => OrderingTerm.asc(t.createdAt)])
@@ -39,6 +37,13 @@ class WorkRequestDao extends DatabaseAccessor<AppDatabase>
         .get();
   }
 
-  Future<void> insertOrUpdate(WorkRequestsTableCompanion row) =>
-      into(workRequestsTable).insertOnConflictUpdate(row);
+  Future<void> insertOrUpdate(WorkRequestsTableCompanion row) async {
+    await into(workRequestsTable).insert(
+      row,
+      onConflict: DoUpdate(
+            (old) => row,
+        target: [workRequestsTable.id],
+      ),
+    );
+  }
 }

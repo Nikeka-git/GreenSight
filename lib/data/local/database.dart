@@ -11,7 +11,7 @@ import 'tables/inspections_table.dart';
 import 'daos/tree_dao.dart';
 import 'daos/work_request_dao.dart';
 
-part 'database.g.dart'; // сгенерируется через build_runner (см. README)
+part 'database.g.dart';
 
 /// Единственная точка входа в локальную SQLite-базу (Drift).
 /// Это ядро офлайн-first логики: всё, что делает пользователь без сети,

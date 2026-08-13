@@ -1,7 +1,5 @@
 import 'dart:math' as math;
-
 import 'package:drift/drift.dart';
-
 import '../database.dart';
 import '../tables/trees_table.dart';
 import '../tables/inspections_table.dart';
@@ -18,15 +16,11 @@ class TreeDao extends DatabaseAccessor<AppDatabase> with _$TreeDaoMixin {
       (select(treesTable)..where((t) => t.localId.equals(localId)))
           .getSingleOrNull();
 
-  /// Простой bounding-box поиск ближайшего дерева. Для продакшена лучше
-  /// заменить на geohash-индекс в Firestore, но для локального SQLite
-  /// этого достаточно — таблица деревьев в масштабах одного города невелика.
   Future<TreesTableData?> findNearby(
       double lat,
       double lng,
       double radiusMeters,
       ) async {
-    // ~1 градус широты ≈ 111_000 м
     final degDelta = radiusMeters / 111000;
     final candidates = await (select(treesTable)
       ..where((t) =>
@@ -40,16 +34,29 @@ class TreeDao extends DatabaseAccessor<AppDatabase> with _$TreeDaoMixin {
       return da.compareTo(db_);
     });
     final closest = candidates.first;
-    final dist =
-    _distanceMeters(lat, lng, closest.latitude, closest.longitude);
+    final dist = _distanceMeters(lat, lng, closest.latitude, closest.longitude);
     return dist <= radiusMeters ? closest : null;
   }
 
-  Future<void> upsertTree(TreesTableCompanion tree) =>
-      into(treesTable).insertOnConflictUpdate(tree);
+  Future<void> upsertTree(TreesTableCompanion tree) async {
+    await into(treesTable).insert(
+      tree,
+      onConflict: DoUpdate(
+            (old) => tree,
+        target: [treesTable.localId],
+      ),
+    );
+  }
 
-  Future<void> addInspection(InspectionsTableCompanion inspection) =>
-      into(inspectionsTable).insertOnConflictUpdate(inspection);
+  Future<void> addInspection(InspectionsTableCompanion inspection) async {
+    await into(inspectionsTable).insert(
+      inspection,
+      onConflict: DoUpdate(
+            (old) => inspection,
+        target: [inspectionsTable.id],
+      ),
+    );
+  }
 
   Stream<List<InspectionsTableData>> watchInspections(String treeLocalId) =>
       (select(inspectionsTable)
@@ -59,7 +66,7 @@ class TreeDao extends DatabaseAccessor<AppDatabase> with _$TreeDaoMixin {
 }
 
 double _distanceMeters(double lat1, double lng1, double lat2, double lng2) {
-  const r = 6371000.0; // метров
+  const r = 6371000.0;
   final dLat = _deg2rad(lat2 - lat1);
   final dLng = _deg2rad(lng2 - lng1);
   final a = math.sin(dLat / 2) * math.sin(dLat / 2) +

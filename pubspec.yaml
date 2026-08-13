@@ -1,5 +1,5 @@
 name: cmd_final
-description: "A new Flutter project."
+description: "GreenSight Flutter project."
 publish_to: 'none'
 
 version: 1.0.0+1
@@ -13,14 +13,15 @@ dependencies:
 
   cupertino_icons: ^1.0.8
   flutter_riverpod: ^3.3.1
-  firebase_core: ^4.9.0
-  cloud_firestore: ^6.4.1
+  firebase_core: ^3.8.0
+  firebase_auth: ^5.3.4
+  cloud_firestore: ^5.4.0
+  firebase_storage: ^12.3.0
 
   # --- Navigation ---
   go_router: ^14.8.1
 
-  # --- Networking (Chopper + HTTP) ---
-  chopper: ^8.0.0
+  # --- Networking ---
   http: ^1.2.0
 
   # --- Local Database (Drift) ---
@@ -28,6 +29,11 @@ dependencies:
   sqlite3_flutter_libs: ^0.5.24
   path_provider: ^2.1.4
   path: ^1.9.1
+
+  # --- Connectivity & Utils ---
+  connectivity_plus: ^6.0.0
+  uuid: ^4.5.1
+  image_picker: ^1.1.2
 
 dev_dependencies:
   flutter_test:
@@ -37,7 +43,6 @@ dev_dependencies:
   # --- Code Generation ---
   build_runner: ^2.4.9
   drift_dev: ^2.22.1
-  chopper_generator: ^8.0.0
 
 flutter:
   uses-material-design: true
