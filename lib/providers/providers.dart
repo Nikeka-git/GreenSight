@@ -16,7 +16,7 @@ import '../domain/repositories/repositories.dart';
 /// `--dart-define=API_URL=http://<host>:3000` (Android emulator: 10.0.2.2).
 const String apiBaseUrl = String.fromEnvironment(
   'API_URL',
-  defaultValue: 'http://localhost:3000',
+  defaultValue: 'http://192.168.0.110:3000',
 );
 
 // ===== SINGLETONS =====
