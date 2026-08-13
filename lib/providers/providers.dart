@@ -10,6 +10,7 @@ import '../data/repositories/tree_repository_impl.dart';
 import '../data/repositories/work_request_repository_impl.dart';
 import '../domain/models/work_request.dart';
 import '../domain/repositories/repositories.dart';
+import '../core/permissions/permission_service.dart';
 
 // ===== SINGLETONS =====
 
@@ -72,4 +73,8 @@ final syncServiceProvider = Provider<SyncService>((ref) {
 final myRequestsProvider = StreamProvider.autoDispose<List<WorkRequest>>((ref) async* {
   final userId = await ref.watch(localUserServiceProvider).getUserId();
   yield* ref.watch(workRequestRepositoryProvider).watchByUser(userId);
+});
+
+final permissionServiceProvider = Provider<PermissionService>((ref) {
+  return PermissionService();
 });
