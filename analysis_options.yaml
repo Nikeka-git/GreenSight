@@ -16,3 +16,11 @@ analyzer:
   errors:
     avoid_print: warning
     prefer_const_constructors: warning
+  exclude:
+    - build/**
+    - android/**
+    - ios/**
+    - web/**
+    - windows/**
+    - macos/**
+    - linux/**
