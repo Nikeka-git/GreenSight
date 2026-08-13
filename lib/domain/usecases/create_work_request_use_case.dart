@@ -1,9 +1,9 @@
 import 'dart:io';
 import 'package:uuid/uuid.dart';
+import '../../core/services/sync_service.dart';
 import '../enums/domain_enums.dart';
 import '../models/work_request.dart';
 import '../repositories/repositories.dart';
-import '../../core/services/sync_service.dart';
 
 class CreateWorkRequestUseCase {
   CreateWorkRequestUseCase({

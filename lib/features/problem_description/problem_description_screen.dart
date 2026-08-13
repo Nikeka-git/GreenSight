@@ -141,7 +141,7 @@ class _ProblemDescriptionScreenState
                         controlAffinity: ListTileControlAffinity.leading,
                         dense: true,
                       );
-                    }).toList(),
+                    }),
                     const SizedBox(height: 16),
                     const Text(
                       'Комментарий (необязательно):',

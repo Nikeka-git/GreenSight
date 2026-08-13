@@ -1,31 +1,26 @@
 import 'dart:async';
 import 'dart:io';
-import '../network/connectivity_service.dart';
-import '../auth/local_user_service.dart';
-import '../../data/remote/ai/ai_api_client.dart';
-import '../../data/remote/ai/ai_result.dart';
-import '../../data/remote/s3/imgbb_upload_service.dart';
-import '../../domain/enums/domain_enums.dart';
-import '../../domain/models/tree.dart';
-import '../../domain/models/work_request.dart';
-import '../../domain/models/inspection.dart';
-import '../../domain/repositories/repositories.dart';
 
+import '../../data/remote/api/greensight_api_client.dart';
+import '../../domain/enums/domain_enums.dart';
+import '../../domain/models/work_request.dart';
+import '../../domain/repositories/repositories.dart';
+import '../auth/local_user_service.dart';
+import '../network/connectivity_service.dart';
+
+/// Pushes local work requests to the GreenSight backend and pulls the user's
+/// server state back so local rows reflect AI verdicts / moderation decisions.
 class SyncService {
   SyncService({
     required this.connectivity,
     required this.workRequestRepo,
-    required this.treeRepo,                    // <-- добавляем
-    required this.aiClient,
-    required this.uploadService,
+    required this.apiClient,
     required this.localUserService,
   });
 
   final ConnectivityService connectivity;
   final WorkRequestRepository workRequestRepo;
-  final TreeRepository treeRepo;               // <-- добавляем поле
-  final AiApiClient aiClient;
-  final ImgBBUploadService uploadService;
+  final GreensightApiClient apiClient;
   final LocalUserService localUserService;
 
   Timer? _syncTimer;
@@ -53,149 +48,63 @@ class SyncService {
     _isSyncing = true;
     try {
       if (!await connectivity.isOnline) return;
-      final pending = await workRequestRepo.getPendingSyncBatch(limit: 10);
-      for (final request in pending) {
-        try {
-          await _processRequest(request);
-        } catch (e) {
-          await _markFailed(request.id, e.toString());
-        }
-      }
+      await _push();
+      await _pull();
     } finally {
       _isSyncing = false;
     }
   }
 
-  Future<void> _processRequest(WorkRequest request) async {
-    // Обновляем статус
-    if (request.status == RequestStatus.draftLocal) {
-      await workRequestRepo.update(
-        request.copyWith(status: RequestStatus.pendingUpload),
-      );
+  Future<void> _push() async {
+    final pending = await workRequestRepo.getPendingSyncBatch(limit: 10);
+    for (final request in pending) {
+      try {
+        await _pushRequest(request);
+      } catch (e) {
+        await _markFailed(request.id, e.toString());
+      }
     }
+  }
 
-    // Загружаем фото
-    String? photoUrl = request.remotePhotoUrl;
-    if (photoUrl == null || photoUrl.isEmpty) {
+  Future<void> _pushRequest(WorkRequest request) async {
+    // 1. Upload the photo if it isn't on the server yet.
+    String? remotePhotoId = request.remotePhotoId;
+    if (remotePhotoId == null) {
       final file = File(request.localPhotoPath);
       if (!await file.exists()) {
-        throw Exception('Фото не найдено: ${request.localPhotoPath}');
+        throw ApiException('Фото не найдено: ${request.localPhotoPath}');
       }
-      photoUrl = await uploadService.uploadPhoto(
-        file: file,
-        requestId: request.id,
-      );
+      remotePhotoId = await apiClient.uploadPhoto(file);
+      await workRequestRepo.update(request.copyWith(remotePhotoId: remotePhotoId));
+    }
+
+    // 2. Push the work request; the server runs AI analysis (status pendingAI).
+    final pushed = request.copyWith(
+      remotePhotoId: remotePhotoId,
+      status: RequestStatus.pendingAI,
+      syncAttempts: request.syncAttempts + 1,
+      lastError: null,
+    );
+    await apiClient.createWorkRequest(payload: pushed.toApiPayload());
+    await workRequestRepo.update(pushed);
+  }
+
+  Future<void> _pull() async {
+    final userId = await localUserService.getUserId();
+    final remote = await apiClient.fetchMyWorkRequests(userId);
+    for (final json in remote) {
+      final local = await workRequestRepo.getById(json['id'] as String);
       await workRequestRepo.update(
-        request.copyWith(
-          remotePhotoUrl: photoUrl,
-          status: RequestStatus.pendingAI,
+        WorkRequest.fromApiJson(
+          json,
+          localPhotoPath: local?.localPhotoPath ?? '',
         ),
       );
     }
-
-    // Отправляем на AI
-    final aiResult = await aiClient.analyzePhoto(
-      photo: File(request.localPhotoPath),
-      latitude: request.latitude,
-      longitude: request.longitude,
-      userProblemCodes: request.userProblems.map((p) => p.name).toList(),
-    );
-
-    // Обрабатываем результат
-    await _handleAiResult(request, aiResult, photoUrl);
-  }
-
-  Future<void> _handleAiResult(
-      WorkRequest request,
-      AiResult aiResult,
-      String photoUrl,
-      ) async {
-    final updatedRequest = request.copyWith(
-      aiCondition: aiResult.condition,
-      aiConfidence: aiResult.confidence,
-      status: aiResult.matchesUserReport
-          ? RequestStatus.approved
-          : RequestStatus.needsModeration,
-      updatedAt: DateTime.now(),
-    );
-    await workRequestRepo.update(updatedRequest);
-
-    if (aiResult.matchesUserReport) {
-      await _createOrUpdateTree(request, aiResult, photoUrl);
-    }
-  }
-
-  Future<void> _createOrUpdateTree(
-      WorkRequest request,
-      AiResult aiResult,
-      String photoUrl,
-      ) async {
-    final existingTree = await treeRepo.findNearbyDuplicate(
-      request.latitude,
-      request.longitude,
-      radiusMeters: 5,
-    );
-
-    final now = DateTime.now();
-    final treeLocalId =
-        existingTree?.localId ?? 'tree_${now.millisecondsSinceEpoch}';
-
-    Tree tree;
-    if (existingTree != null) {
-      tree = existingTree.copyWith(
-        condition: aiResult.condition,
-        status: aiResult.condition == TreeCondition.healthy
-            ? TreeStatus.healthy
-            : TreeStatus.needsWork,
-        priority: aiResult.suggestedPriority,
-        recommendation: aiResult.recommendation,
-        lastInspectionDate: now,
-        updatedAt: now,
-        mainPhotoUrl: photoUrl,
-      );
-    } else {
-      tree = Tree(
-        localId: treeLocalId,
-        latitude: request.latitude,
-        longitude: request.longitude,
-        category: TreeCategory.unknown,
-        condition: aiResult.condition,
-        status: aiResult.condition == TreeCondition.healthy
-            ? TreeStatus.healthy
-            : TreeStatus.needsWork,
-        mainPhotoUrl: photoUrl,
-        lastInspectionDate: now,
-        recommendation: aiResult.recommendation,
-        priority: aiResult.suggestedPriority,
-        createdAt: now,
-        updatedAt: now,
-      );
-    }
-
-    await treeRepo.upsertTree(tree);
-
-    final updatedRequest = request.copyWith(
-      treeLocalId: tree.localId,
-      status: RequestStatus.approved,
-      updatedAt: now,
-    );
-    await workRequestRepo.update(updatedRequest);
-
-    final inspection = Inspection(
-      id: 'insp_${now.millisecondsSinceEpoch}',
-      treeLocalId: tree.localId,
-      photoUrl: photoUrl,
-      aiCondition: aiResult.condition,
-      aiConfidence: aiResult.confidence,
-      inspectedAt: now,
-      inspectorId: request.createdByUserId,
-    );
-    await treeRepo.addInspection(inspection);
   }
 
   Future<void> _markFailed(String requestId, String error) async {
-    final pending = await workRequestRepo.getPendingSyncBatch(limit: 1000);
-    final request = pending.where((r) => r.id == requestId).firstOrNull;
+    final request = await workRequestRepo.getById(requestId);
     if (request == null) return;
     await workRequestRepo.update(
       request.copyWith(

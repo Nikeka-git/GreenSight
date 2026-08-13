@@ -4,6 +4,10 @@ import '../tables/work_requests_table.dart';
 
 part 'work_request_dao.g.dart';
 
+/// Maximum automatic push attempts before a request stays `failed` until the
+/// user retries manually.
+const int maxSyncRetries = 5;
+
 @DriftAccessor(tables: [WorkRequestsTable])
 class WorkRequestDao extends DatabaseAccessor<AppDatabase>
     with _$WorkRequestDaoMixin {
@@ -24,14 +28,18 @@ class WorkRequestDao extends DatabaseAccessor<AppDatabase>
       (select(workRequestsTable)..where((t) => t.status.equals(status)))
           .watch();
 
+  Future<WorkRequestsTableData?> getById(String id) =>
+      (select(workRequestsTable)..where((t) => t.id.equals(id)))
+          .getSingleOrNull();
+
+  /// Rows still waiting to be pushed to the server: drafts, uploads and
+  /// failed (below the retry cap). `pendingAI` rows are already on the server
+  /// and are only reconciled via pull.
   Future<List<WorkRequestsTableData>> getPendingSyncBatch({int limit = 10}) {
     return (select(workRequestsTable)
-      ..where((t) => t.status.isIn([
-        'draftLocal',
-        'pendingUpload',
-        'pendingAI',
-        'failed',
-      ]))
+      ..where((t) =>
+          t.status.isIn(['draftLocal', 'pendingUpload', 'failed']) &
+          t.syncAttempts.isSmallerThanValue(maxSyncRetries))
       ..orderBy([(t) => OrderingTerm.asc(t.createdAt)])
       ..limit(limit))
         .get();

@@ -820,6 +820,17 @@ class $WorkRequestsTableTable extends WorkRequestsTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _remotePhotoIdMeta = const VerificationMeta(
+    'remotePhotoId',
+  );
+  @override
+  late final GeneratedColumn<String> remotePhotoId = GeneratedColumn<String>(
+    'remote_photo_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _remotePhotoUrlMeta = const VerificationMeta(
     'remotePhotoUrl',
   );
@@ -967,6 +978,7 @@ class $WorkRequestsTableTable extends WorkRequestsTable
     id,
     treeLocalId,
     localPhotoPath,
+    remotePhotoId,
     remotePhotoUrl,
     latitude,
     longitude,
@@ -1017,6 +1029,15 @@ class $WorkRequestsTableTable extends WorkRequestsTable
       );
     } else if (isInserting) {
       context.missing(_localPhotoPathMeta);
+    }
+    if (data.containsKey('remote_photo_id')) {
+      context.handle(
+        _remotePhotoIdMeta,
+        remotePhotoId.isAcceptableOrUnknown(
+          data['remote_photo_id']!,
+          _remotePhotoIdMeta,
+        ),
+      );
     }
     if (data.containsKey('remote_photo_url')) {
       context.handle(
@@ -1152,6 +1173,10 @@ class $WorkRequestsTableTable extends WorkRequestsTable
         DriftSqlType.string,
         data['${effectivePrefix}local_photo_path'],
       )!,
+      remotePhotoId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}remote_photo_id'],
+      ),
       remotePhotoUrl: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}remote_photo_url'],
@@ -1218,6 +1243,7 @@ class WorkRequestsTableData extends DataClass
   final String id;
   final String? treeLocalId;
   final String localPhotoPath;
+  final String? remotePhotoId;
   final String? remotePhotoUrl;
   final double latitude;
   final double longitude;
@@ -1235,6 +1261,7 @@ class WorkRequestsTableData extends DataClass
     required this.id,
     this.treeLocalId,
     required this.localPhotoPath,
+    this.remotePhotoId,
     this.remotePhotoUrl,
     required this.latitude,
     required this.longitude,
@@ -1257,6 +1284,9 @@ class WorkRequestsTableData extends DataClass
       map['tree_local_id'] = Variable<String>(treeLocalId);
     }
     map['local_photo_path'] = Variable<String>(localPhotoPath);
+    if (!nullToAbsent || remotePhotoId != null) {
+      map['remote_photo_id'] = Variable<String>(remotePhotoId);
+    }
     if (!nullToAbsent || remotePhotoUrl != null) {
       map['remote_photo_url'] = Variable<String>(remotePhotoUrl);
     }
@@ -1290,6 +1320,9 @@ class WorkRequestsTableData extends DataClass
           ? const Value.absent()
           : Value(treeLocalId),
       localPhotoPath: Value(localPhotoPath),
+      remotePhotoId: remotePhotoId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(remotePhotoId),
       remotePhotoUrl: remotePhotoUrl == null && nullToAbsent
           ? const Value.absent()
           : Value(remotePhotoUrl),
@@ -1325,6 +1358,7 @@ class WorkRequestsTableData extends DataClass
       id: serializer.fromJson<String>(json['id']),
       treeLocalId: serializer.fromJson<String?>(json['treeLocalId']),
       localPhotoPath: serializer.fromJson<String>(json['localPhotoPath']),
+      remotePhotoId: serializer.fromJson<String?>(json['remotePhotoId']),
       remotePhotoUrl: serializer.fromJson<String?>(json['remotePhotoUrl']),
       latitude: serializer.fromJson<double>(json['latitude']),
       longitude: serializer.fromJson<double>(json['longitude']),
@@ -1347,6 +1381,7 @@ class WorkRequestsTableData extends DataClass
       'id': serializer.toJson<String>(id),
       'treeLocalId': serializer.toJson<String?>(treeLocalId),
       'localPhotoPath': serializer.toJson<String>(localPhotoPath),
+      'remotePhotoId': serializer.toJson<String?>(remotePhotoId),
       'remotePhotoUrl': serializer.toJson<String?>(remotePhotoUrl),
       'latitude': serializer.toJson<double>(latitude),
       'longitude': serializer.toJson<double>(longitude),
@@ -1367,6 +1402,7 @@ class WorkRequestsTableData extends DataClass
     String? id,
     Value<String?> treeLocalId = const Value.absent(),
     String? localPhotoPath,
+    Value<String?> remotePhotoId = const Value.absent(),
     Value<String?> remotePhotoUrl = const Value.absent(),
     double? latitude,
     double? longitude,
@@ -1384,6 +1420,9 @@ class WorkRequestsTableData extends DataClass
     id: id ?? this.id,
     treeLocalId: treeLocalId.present ? treeLocalId.value : this.treeLocalId,
     localPhotoPath: localPhotoPath ?? this.localPhotoPath,
+    remotePhotoId: remotePhotoId.present
+        ? remotePhotoId.value
+        : this.remotePhotoId,
     remotePhotoUrl: remotePhotoUrl.present
         ? remotePhotoUrl.value
         : this.remotePhotoUrl,
@@ -1409,6 +1448,9 @@ class WorkRequestsTableData extends DataClass
       localPhotoPath: data.localPhotoPath.present
           ? data.localPhotoPath.value
           : this.localPhotoPath,
+      remotePhotoId: data.remotePhotoId.present
+          ? data.remotePhotoId.value
+          : this.remotePhotoId,
       remotePhotoUrl: data.remotePhotoUrl.present
           ? data.remotePhotoUrl.value
           : this.remotePhotoUrl,
@@ -1445,6 +1487,7 @@ class WorkRequestsTableData extends DataClass
           ..write('id: $id, ')
           ..write('treeLocalId: $treeLocalId, ')
           ..write('localPhotoPath: $localPhotoPath, ')
+          ..write('remotePhotoId: $remotePhotoId, ')
           ..write('remotePhotoUrl: $remotePhotoUrl, ')
           ..write('latitude: $latitude, ')
           ..write('longitude: $longitude, ')
@@ -1467,6 +1510,7 @@ class WorkRequestsTableData extends DataClass
     id,
     treeLocalId,
     localPhotoPath,
+    remotePhotoId,
     remotePhotoUrl,
     latitude,
     longitude,
@@ -1488,6 +1532,7 @@ class WorkRequestsTableData extends DataClass
           other.id == this.id &&
           other.treeLocalId == this.treeLocalId &&
           other.localPhotoPath == this.localPhotoPath &&
+          other.remotePhotoId == this.remotePhotoId &&
           other.remotePhotoUrl == this.remotePhotoUrl &&
           other.latitude == this.latitude &&
           other.longitude == this.longitude &&
@@ -1508,6 +1553,7 @@ class WorkRequestsTableCompanion
   final Value<String> id;
   final Value<String?> treeLocalId;
   final Value<String> localPhotoPath;
+  final Value<String?> remotePhotoId;
   final Value<String?> remotePhotoUrl;
   final Value<double> latitude;
   final Value<double> longitude;
@@ -1526,6 +1572,7 @@ class WorkRequestsTableCompanion
     this.id = const Value.absent(),
     this.treeLocalId = const Value.absent(),
     this.localPhotoPath = const Value.absent(),
+    this.remotePhotoId = const Value.absent(),
     this.remotePhotoUrl = const Value.absent(),
     this.latitude = const Value.absent(),
     this.longitude = const Value.absent(),
@@ -1545,6 +1592,7 @@ class WorkRequestsTableCompanion
     required String id,
     this.treeLocalId = const Value.absent(),
     required String localPhotoPath,
+    this.remotePhotoId = const Value.absent(),
     this.remotePhotoUrl = const Value.absent(),
     required double latitude,
     required double longitude,
@@ -1572,6 +1620,7 @@ class WorkRequestsTableCompanion
     Expression<String>? id,
     Expression<String>? treeLocalId,
     Expression<String>? localPhotoPath,
+    Expression<String>? remotePhotoId,
     Expression<String>? remotePhotoUrl,
     Expression<double>? latitude,
     Expression<double>? longitude,
@@ -1591,6 +1640,7 @@ class WorkRequestsTableCompanion
       if (id != null) 'id': id,
       if (treeLocalId != null) 'tree_local_id': treeLocalId,
       if (localPhotoPath != null) 'local_photo_path': localPhotoPath,
+      if (remotePhotoId != null) 'remote_photo_id': remotePhotoId,
       if (remotePhotoUrl != null) 'remote_photo_url': remotePhotoUrl,
       if (latitude != null) 'latitude': latitude,
       if (longitude != null) 'longitude': longitude,
@@ -1612,6 +1662,7 @@ class WorkRequestsTableCompanion
     Value<String>? id,
     Value<String?>? treeLocalId,
     Value<String>? localPhotoPath,
+    Value<String?>? remotePhotoId,
     Value<String?>? remotePhotoUrl,
     Value<double>? latitude,
     Value<double>? longitude,
@@ -1631,6 +1682,7 @@ class WorkRequestsTableCompanion
       id: id ?? this.id,
       treeLocalId: treeLocalId ?? this.treeLocalId,
       localPhotoPath: localPhotoPath ?? this.localPhotoPath,
+      remotePhotoId: remotePhotoId ?? this.remotePhotoId,
       remotePhotoUrl: remotePhotoUrl ?? this.remotePhotoUrl,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
@@ -1659,6 +1711,9 @@ class WorkRequestsTableCompanion
     }
     if (localPhotoPath.present) {
       map['local_photo_path'] = Variable<String>(localPhotoPath.value);
+    }
+    if (remotePhotoId.present) {
+      map['remote_photo_id'] = Variable<String>(remotePhotoId.value);
     }
     if (remotePhotoUrl.present) {
       map['remote_photo_url'] = Variable<String>(remotePhotoUrl.value);
@@ -1711,6 +1766,7 @@ class WorkRequestsTableCompanion
           ..write('id: $id, ')
           ..write('treeLocalId: $treeLocalId, ')
           ..write('localPhotoPath: $localPhotoPath, ')
+          ..write('remotePhotoId: $remotePhotoId, ')
           ..write('remotePhotoUrl: $remotePhotoUrl, ')
           ..write('latitude: $latitude, ')
           ..write('longitude: $longitude, ')
@@ -2608,6 +2664,7 @@ typedef $$WorkRequestsTableTableCreateCompanionBuilder =
       required String id,
       Value<String?> treeLocalId,
       required String localPhotoPath,
+      Value<String?> remotePhotoId,
       Value<String?> remotePhotoUrl,
       required double latitude,
       required double longitude,
@@ -2628,6 +2685,7 @@ typedef $$WorkRequestsTableTableUpdateCompanionBuilder =
       Value<String> id,
       Value<String?> treeLocalId,
       Value<String> localPhotoPath,
+      Value<String?> remotePhotoId,
       Value<String?> remotePhotoUrl,
       Value<double> latitude,
       Value<double> longitude,
@@ -2665,6 +2723,11 @@ class $$WorkRequestsTableTableFilterComposer
 
   ColumnFilters<String> get localPhotoPath => $composableBuilder(
     column: $table.localPhotoPath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get remotePhotoId => $composableBuilder(
+    column: $table.remotePhotoId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2758,6 +2821,11 @@ class $$WorkRequestsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get remotePhotoId => $composableBuilder(
+    column: $table.remotePhotoId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get remotePhotoUrl => $composableBuilder(
     column: $table.remotePhotoUrl,
     builder: (column) => ColumnOrderings(column),
@@ -2843,6 +2911,11 @@ class $$WorkRequestsTableTableAnnotationComposer
 
   GeneratedColumn<String> get localPhotoPath => $composableBuilder(
     column: $table.localPhotoPath,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get remotePhotoId => $composableBuilder(
+    column: $table.remotePhotoId,
     builder: (column) => column,
   );
 
@@ -2943,6 +3016,7 @@ class $$WorkRequestsTableTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String?> treeLocalId = const Value.absent(),
                 Value<String> localPhotoPath = const Value.absent(),
+                Value<String?> remotePhotoId = const Value.absent(),
                 Value<String?> remotePhotoUrl = const Value.absent(),
                 Value<double> latitude = const Value.absent(),
                 Value<double> longitude = const Value.absent(),
@@ -2961,6 +3035,7 @@ class $$WorkRequestsTableTableTableManager
                 id: id,
                 treeLocalId: treeLocalId,
                 localPhotoPath: localPhotoPath,
+                remotePhotoId: remotePhotoId,
                 remotePhotoUrl: remotePhotoUrl,
                 latitude: latitude,
                 longitude: longitude,
@@ -2981,6 +3056,7 @@ class $$WorkRequestsTableTableTableManager
                 required String id,
                 Value<String?> treeLocalId = const Value.absent(),
                 required String localPhotoPath,
+                Value<String?> remotePhotoId = const Value.absent(),
                 Value<String?> remotePhotoUrl = const Value.absent(),
                 required double latitude,
                 required double longitude,
@@ -2999,6 +3075,7 @@ class $$WorkRequestsTableTableTableManager
                 id: id,
                 treeLocalId: treeLocalId,
                 localPhotoPath: localPhotoPath,
+                remotePhotoId: remotePhotoId,
                 remotePhotoUrl: remotePhotoUrl,
                 latitude: latitude,
                 longitude: longitude,

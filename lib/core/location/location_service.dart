@@ -28,7 +28,7 @@ class LocationService {
     }
 
     try {
-      LocationData locationData = await _location.getLocation();
+      final LocationData locationData = await _location.getLocation();
       return locationData;
     } catch (e) {
       return null;

@@ -1,5 +1,5 @@
-import '../models/tree.dart';
 import '../models/inspection.dart';
+import '../models/tree.dart';
 import '../models/work_request.dart';
 
 abstract class TreeRepository {
@@ -14,6 +14,7 @@ abstract class TreeRepository {
 abstract class WorkRequestRepository {
   Stream<List<WorkRequest>> watchAll();
   Stream<List<WorkRequest>> watchByUser(String userId);
+  Future<WorkRequest?> getById(String id);
   Future<List<WorkRequest>> getPendingSyncBatch({int limit});
   Future<void> createLocal(WorkRequest request);
   Future<void> update(WorkRequest request);

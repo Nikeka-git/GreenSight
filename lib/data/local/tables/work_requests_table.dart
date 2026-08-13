@@ -6,6 +6,7 @@ class WorkRequestsTable extends Table {
   TextColumn get treeLocalId => text().nullable()();
 
   TextColumn get localPhotoPath => text()();
+  TextColumn get remotePhotoId => text().nullable()();
   TextColumn get remotePhotoUrl => text().nullable()();
 
   RealColumn get latitude => real()();

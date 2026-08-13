@@ -1,15 +1,21 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../core/network/connectivity_service.dart';
-import '../core/services/sync_service.dart';
+
 import '../core/auth/local_user_service.dart';
 import '../core/location/location_service.dart';
+import '../core/network/connectivity_service.dart';
+import '../core/services/sync_service.dart';
 import '../data/local/database.dart';
-import '../data/remote/ai/ai_api_client.dart';
-import '../data/remote/s3/imgbb_upload_service.dart';
+import '../data/remote/api/greensight_api_client.dart';
 import '../data/repositories/tree_repository_impl.dart';
 import '../data/repositories/work_request_repository_impl.dart';
 import '../domain/models/work_request.dart';
 import '../domain/repositories/repositories.dart';
+
+/// Backend API base URL. Override at build/run time with
+const String apiBaseUrl = String.fromEnvironment(
+  'API_URL',
+  defaultValue: 'http://192.168.0.110:3000',
+);
 
 // ===== SINGLETONS =====
 
@@ -29,14 +35,8 @@ final locationServiceProvider = Provider<LocationService>((ref) {
   return LocationService();
 });
 
-final uploadServiceProvider = Provider<ImgBBUploadService>((ref) {
-  return ImgBBUploadService(apiKey: 'ваш_ключ_заглушка');
-});
-
-final aiApiClientProvider = Provider<AiApiClient>((ref) {
-  return AiApiClient.create(
-    baseUrl: 'https://ai.greensight.example.kz/api/v1',
-  );
+final apiClientProvider = Provider<GreensightApiClient>((ref) {
+  return GreensightApiClient(baseUrl: apiBaseUrl);
 });
 
 // ===== REPOSITORIES =====
@@ -57,9 +57,7 @@ final syncServiceProvider = Provider<SyncService>((ref) {
   final service = SyncService(
     connectivity: ref.watch(connectivityServiceProvider),
     workRequestRepo: ref.watch(workRequestRepositoryProvider),
-    treeRepo: ref.watch(treeRepositoryProvider),
-    aiClient: ref.watch(aiApiClientProvider),
-    uploadService: ref.watch(uploadServiceProvider),
+    apiClient: ref.watch(apiClientProvider),
     localUserService: ref.watch(localUserServiceProvider),
   );
   service.start();

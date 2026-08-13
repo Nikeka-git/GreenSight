@@ -1,11 +1,11 @@
 {
-    "name": "cmd_final",
-    "short_name": "cmd_final",
+    "name": "GreenSight",
+    "short_name": "GreenSight",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "GreenSight: report tree problems.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

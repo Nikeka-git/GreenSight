@@ -1,4 +1,4 @@
-name: cmd_final
+name: greensight
 description: "GreenSight Flutter project."
 publish_to: 'none'
 
@@ -25,6 +25,8 @@ dependencies:
 
   # --- Networking ---
   http: ^1.2.0
+  http_parser: ^4.0.2
+  mime: ^1.0.5
 
   # --- Local Database (Drift) ---
   drift: ^2.34.0
