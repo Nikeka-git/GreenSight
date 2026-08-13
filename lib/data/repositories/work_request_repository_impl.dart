@@ -3,6 +3,7 @@ import '../../domain/enums/domain_enums.dart';
 import '../../domain/models/work_request.dart';
 import '../../domain/repositories/repositories.dart';
 import '../local/database.dart';
+import '../local/tables/work_requests_table.dart';
 
 /// Реализация репозитория заявок, работающая только с локальной БД (Drift).
 /// Все операции выполняются мгновенно и без удалённых вызовов.
@@ -22,12 +23,6 @@ class WorkRequestRepositoryImpl implements WorkRequestRepository {
 
 
   @override
-  Future<WorkRequest?> getById(String id) async {
-    final row = await _db.workRequestDao.getById(id);
-    return row == null ? null : _fromRow(row);
-  }
-
-  @override
   Future<List<WorkRequest>> getPendingSyncBatch({int limit = 10}) async {
     final rows = await _db.workRequestDao.getPendingSyncBatch(limit: limit);
     return rows.map(_fromRow).toList();
@@ -41,13 +36,13 @@ class WorkRequestRepositoryImpl implements WorkRequestRepository {
   @override
   Future<void> update(WorkRequest request) async {
     await _db.workRequestDao.insertOrUpdate(_toCompanion(request));
+    // Удалённая синхронизация пока отключена (будет добавлена позже с бэкендом)
   }
 
   WorkRequest _fromRow(WorkRequestsTableData r) => WorkRequest(
     id: r.id,
     treeLocalId: r.treeLocalId,
     localPhotoPath: r.localPhotoPath,
-    remotePhotoId: r.remotePhotoId,
     remotePhotoUrl: r.remotePhotoUrl,
     latitude: r.latitude,
     longitude: r.longitude,
@@ -74,7 +69,6 @@ class WorkRequestRepositoryImpl implements WorkRequestRepository {
         id: drift.Value(r.id),
         treeLocalId: drift.Value(r.treeLocalId),
         localPhotoPath: drift.Value(r.localPhotoPath),
-        remotePhotoId: drift.Value(r.remotePhotoId),
         remotePhotoUrl: drift.Value(r.remotePhotoUrl),
         latitude: drift.Value(r.latitude),
         longitude: drift.Value(r.longitude),
@@ -89,4 +83,8 @@ class WorkRequestRepositoryImpl implements WorkRequestRepository {
         syncAttempts: drift.Value(r.syncAttempts),
         lastError: drift.Value(r.lastError),
       );
+}
+
+extension _FirstOrNull<T> on Iterable<T> {
+  T? get firstOrNull => isEmpty ? null : first;
 }

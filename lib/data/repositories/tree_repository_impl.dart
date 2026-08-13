@@ -1,9 +1,10 @@
 import 'package:drift/drift.dart' as drift;
 import '../../domain/enums/domain_enums.dart';
-import '../../domain/models/inspection.dart';
 import '../../domain/models/tree.dart';
+import '../../domain/models/inspection.dart';
 import '../../domain/repositories/repositories.dart';
 import '../local/database.dart';
+import '../local/tables/trees_table.dart';
 
 /// Реализация репозитория деревьев, работающая только с локальной БД (Drift).
 /// Все операции выполняются синхронно и без удалённых вызовов.

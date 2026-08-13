@@ -4,11 +4,11 @@ import 'package:drift/native.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
-import 'daos/tree_dao.dart';
-import 'daos/work_request_dao.dart';
-import 'tables/inspections_table.dart';
 import 'tables/trees_table.dart';
 import 'tables/work_requests_table.dart';
+import 'tables/inspections_table.dart';
+import 'daos/tree_dao.dart';
+import 'daos/work_request_dao.dart';
 
 part 'database.g.dart';
 
@@ -20,17 +20,12 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 1;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-        onCreate: (m) => m.createAll(),
-        onUpgrade: (m, from, to) async {
-          if (from < 2) {
-            await m.addColumn(workRequestsTable, workRequestsTable.remotePhotoId);
-          }
-        },
-      );
+    onCreate: (m) => m.createAll(),
+  );
 }
 
 LazyDatabase _openConnection() {

@@ -1,8 +1,8 @@
 import 'dart:math' as math;
 import 'package:drift/drift.dart';
 import '../database.dart';
-import '../tables/inspections_table.dart';
 import '../tables/trees_table.dart';
+import '../tables/inspections_table.dart';
 
 part 'tree_dao.g.dart';
 

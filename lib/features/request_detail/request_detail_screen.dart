@@ -1,13 +1,13 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/theme/app_theme.dart';
-import '../../core/widgets/decor.dart';
-import '../../core/widgets/specimen_tag.dart';
-import '../../core/widgets/status_style.dart';
 import '../../domain/enums/domain_enums.dart';
 import '../../domain/models/work_request.dart';
 import '../../providers/providers.dart';
+import '../../core/theme/app_theme.dart';
+import '../../core/widgets/specimen_tag.dart';
+import '../../core/widgets/status_style.dart';
+import '../../core/widgets/decor.dart';
 
 class RequestDetailScreen extends ConsumerWidget {
   final String requestId;

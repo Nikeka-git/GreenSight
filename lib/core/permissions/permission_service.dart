@@ -13,14 +13,13 @@ class PermissionService {
   /// Возвращает true, если все даны.
   Future<bool> requestPermissions() async {
     // Запрашиваем камеру и геолокацию
-    final Map<permission.Permission, permission.PermissionStatus> statuses =
-        await [
+    Map<permission.Permission, permission.PermissionStatus> statuses = await [
       permission.Permission.camera,
       permission.Permission.location,
     ].request();
 
     // Проверяем, что все даны
-    final bool allGranted = statuses.values.every((status) => status.isGranted);
+    bool allGranted = statuses.values.every((status) => status.isGranted);
     return allGranted;
   }
 

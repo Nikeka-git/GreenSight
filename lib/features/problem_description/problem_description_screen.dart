@@ -1,12 +1,12 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/theme/app_theme.dart';
-import '../../core/widgets/decor.dart';
-import '../../core/widgets/status_style.dart';
 import '../../domain/enums/domain_enums.dart';
 import '../../domain/usecases/create_work_request_use_case.dart';
 import '../../providers/providers.dart';
+import '../../core/theme/app_theme.dart';
+import '../../core/widgets/decor.dart';
+import '../../core/widgets/status_style.dart';
 
 class ProblemDescriptionScreen extends ConsumerStatefulWidget {
   final File photoFile;
@@ -110,7 +110,7 @@ class _ProblemDescriptionScreenState
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        const Icon(Icons.place_outlined,
+                        Icon(Icons.place_outlined,
                             size: 14, color: AppColors.inkFaint),
                         const SizedBox(width: 4),
                         Text(
@@ -157,7 +157,7 @@ class _ProblemDescriptionScreenState
             ),
             Container(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: AppColors.birch,
                 border: Border(top: BorderSide(color: AppColors.divider)),
               ),

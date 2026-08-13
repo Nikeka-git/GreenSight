@@ -3,9 +3,10 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../providers/providers.dart';
+import '../../core/location/location_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/decor.dart';
-import '../../providers/providers.dart';
 import '../problem_description/problem_description_screen.dart';
 
 class CameraScreen extends ConsumerStatefulWidget {
@@ -117,6 +118,17 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
         backgroundColor: Colors.transparent,
         foregroundColor: AppColors.birch,
         elevation: 0,
+        flexibleSpace: IgnorePointer(
+          child: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Colors.black54, Colors.transparent],
+              ),
+            ),
+          ),
+        ),
         title: Text(
           'Сфотографировать дерево',
           style: AppTypography.textTheme.headlineSmall
@@ -156,7 +168,17 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
             ),
 
           if (_isCameraReady)
-            const ViewfinderCorners(color: Colors.white70, inset: 40),
+            Builder(
+              builder: (context) {
+                final topInset = MediaQuery.of(context).padding.top +
+                    kToolbarHeight +
+                    18;
+                return ViewfinderCorners(
+                  color: Colors.white70,
+                  padding: EdgeInsets.fromLTRB(28, topInset, 28, 28),
+                );
+              },
+            ),
 
           // Подсказка над кнопкой съёмки
           Positioned(

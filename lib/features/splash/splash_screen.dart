@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/permissions/permission_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/tree_mark.dart';
 import '../../providers/providers.dart';
@@ -133,7 +134,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                   ),
                   const SizedBox(height: 56),
                   if (_isLoading) ...[
-                    const SizedBox(
+                    SizedBox(
                       width: 22,
                       height: 22,
                       child: CircularProgressIndicator(
@@ -149,7 +150,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                           ?.copyWith(color: AppColors.birch.withValues(alpha: 0.85)),
                     ),
                   ] else ...[
-                    const Icon(Icons.eco_outlined, color: AppColors.amber, size: 28),
+                    Icon(Icons.eco_outlined, color: AppColors.amber, size: 28),
                     const SizedBox(height: 12),
                     Text(
                       _statusMessage,

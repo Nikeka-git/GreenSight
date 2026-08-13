@@ -5,5 +5,8 @@ import 'app.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  /*await Firebase.initializeApp(
+    // options: DefaultFirebaseOptions.currentPlatform, // если используете flutterfire
+  );*/
   runApp(const ProviderScope(child: App()));
 }

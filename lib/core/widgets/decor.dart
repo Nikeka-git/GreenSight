@@ -28,12 +28,14 @@ class ViewfinderCorners extends StatelessWidget {
     super.key,
     this.color = Colors.white,
     this.inset = 28,
+    this.padding,
     this.armLength = 26,
     this.strokeWidth = 2.6,
   });
 
   final Color color;
   final double inset;
+  final EdgeInsets? padding;
   final double armLength;
   final double strokeWidth;
 
@@ -41,7 +43,7 @@ class ViewfinderCorners extends StatelessWidget {
   Widget build(BuildContext context) {
     return IgnorePointer(
       child: Padding(
-        padding: EdgeInsets.all(inset),
+        padding: padding ?? EdgeInsets.all(inset),
         child: CustomPaint(
           painter: _CornerPainter(
             color: color,

@@ -2,12 +2,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../providers/providers.dart';
+import '../../domain/models/work_request.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/specimen_tag.dart';
 import '../../core/widgets/status_style.dart';
 import '../../core/widgets/tree_mark.dart';
-import '../../domain/models/work_request.dart';
-import '../../providers/providers.dart';
 
 class MyRequestsScreen extends ConsumerWidget {
   const MyRequestsScreen({super.key});
@@ -35,7 +35,7 @@ class MyRequestsScreen extends ConsumerWidget {
             child: ListView.separated(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
               itemCount: list.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 10),
+              separatorBuilder: (_, __) => const SizedBox(height: 10),
               itemBuilder: (context, index) => _RequestCard(request: list[index]),
             ),
           );
