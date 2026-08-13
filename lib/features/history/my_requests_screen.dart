@@ -3,8 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/providers.dart';
-import '../../domain/enums/domain_enums.dart';
 import '../../domain/models/work_request.dart';
+import '../../core/theme/app_theme.dart';
+import '../../core/widgets/specimen_tag.dart';
+import '../../core/widgets/status_style.dart';
+import '../../core/widgets/tree_mark.dart';
 
 class MyRequestsScreen extends ConsumerWidget {
   const MyRequestsScreen({super.key});
@@ -18,86 +21,36 @@ class MyRequestsScreen extends ConsumerWidget {
         title: const Text('Мои заявки'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () {
-              // Принудительно обновляем данные
-              ref.invalidate(myRequestsProvider);
-            },
+            icon: const Icon(Icons.refresh_rounded),
+            onPressed: () => ref.invalidate(myRequestsProvider),
           ),
         ],
       ),
       body: requestsAsync.when(
         data: (list) {
-          if (list.isEmpty) {
-            return const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.inbox, size: 64, color: Colors.grey),
-                  SizedBox(height: 16),
-                  Text(
-                    'У вас пока нет заявок',
-                    style: TextStyle(fontSize: 18, color: Colors.grey),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Сфотографируйте дерево, чтобы начать',
-                    style: TextStyle(fontSize: 14, color: Colors.grey),
-                  ),
-                ],
-              ),
-            );
-          }
-          return ListView.builder(
-            itemCount: list.length,
-            itemBuilder: (context, index) {
-              final request = list[index];
-              return Card(
-                margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                child: ListTile(
-                  leading: _buildStatusIcon(request.status),
-                  title: Text(
-                    request.userProblems.map((e) => _problemLabel(e)).join(', '),
-                    style: const TextStyle(fontWeight: FontWeight.w500),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Статус: ${_statusLabel(request.status)}',
-                        style: TextStyle(
-                          color: _statusColor(request.status),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      Text(
-                        '${request.createdAt.day}.${request.createdAt.month}.${request.createdAt.year} ${request.createdAt.hour.toString().padLeft(2, '0')}:${request.createdAt.minute.toString().padLeft(2, '0')}',
-                        style: const TextStyle(fontSize: 12, color: Colors.grey),
-                      ),
-                    ],
-                  ),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    // Переход на экран деталей
-                    context.push('/history/request/${request.id}');
-                  },
-                ),
-              );
-            },
+          if (list.isEmpty) return const _EmptyState();
+          return RefreshIndicator(
+            color: AppColors.canopy,
+            onRefresh: () async => ref.invalidate(myRequestsProvider),
+            child: ListView.separated(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+              itemCount: list.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 10),
+              itemBuilder: (context, index) => _RequestCard(request: list[index]),
+            ),
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () =>
+            const Center(child: CircularProgressIndicator(color: AppColors.canopy)),
         error: (err, stack) => Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, size: 64, color: Colors.red),
+              const Icon(Icons.error_outline, size: 56, color: AppColors.rust),
               const SizedBox(height: 16),
-              Text('Ошибка: $err'),
+              Text('Ошибка: $err', textAlign: TextAlign.center),
               const SizedBox(height: 16),
-              ElevatedButton(
+              OutlinedButton(
                 onPressed: () => ref.invalidate(myRequestsProvider),
                 child: const Text('Повторить'),
               ),
@@ -107,95 +60,112 @@ class MyRequestsScreen extends ConsumerWidget {
       ),
     );
   }
+}
 
-  Widget _buildStatusIcon(RequestStatus status) {
-    IconData iconData;
-    Color color;
-    switch (status) {
-      case RequestStatus.draftLocal:
-        iconData = Icons.save;
-        color = Colors.grey;
-        break;
-      case RequestStatus.pendingUpload:
-        iconData = Icons.cloud_upload;
-        color = Colors.orange;
-        break;
-      case RequestStatus.pendingAI:
-        iconData = Icons.psychology;
-        color = Colors.blue;
-        break;
-      case RequestStatus.approved:
-        iconData = Icons.check_circle;
-        color = Colors.green;
-        break;
-      case RequestStatus.needsModeration:
-        iconData = Icons.hourglass_empty;
-        color = Colors.orange;
-        break;
-      case RequestStatus.rejected:
-        iconData = Icons.cancel;
-        color = Colors.red;
-        break;
-      case RequestStatus.failed:
-        iconData = Icons.error;
-        color = Colors.red;
-        break;
-    }
-    return Icon(iconData, color: color, size: 30);
+class _EmptyState extends StatelessWidget {
+  const _EmptyState();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const TreeMark(size: 72, color: AppColors.inkFaint, strokeWidth: 2.2),
+            const SizedBox(height: 20),
+            Text('Заявок пока нет', style: Theme.of(context).textTheme.headlineSmall),
+            const SizedBox(height: 8),
+            Text(
+              'Сфотографируйте дерево на вкладке «Камера» —\nоно появится здесь',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ],
+        ),
+      ),
+    );
   }
+}
 
-  String _statusLabel(RequestStatus status) {
-    switch (status) {
-      case RequestStatus.draftLocal:
-        return 'Сохранено локально';
-      case RequestStatus.pendingUpload:
-        return 'Загрузка фото...';
-      case RequestStatus.pendingAI:
-        return 'Анализ AI...';
-      case RequestStatus.approved:
-        return 'Одобрено';
-      case RequestStatus.needsModeration:
-        return 'На модерации';
-      case RequestStatus.rejected:
-        return 'Отклонено';
-      case RequestStatus.failed:
-        return 'Ошибка';
-    }
-  }
+class _RequestCard extends StatelessWidget {
+  const _RequestCard({required this.request});
+  final WorkRequest request;
 
-  Color _statusColor(RequestStatus status) {
-    switch (status) {
-      case RequestStatus.draftLocal:
-        return Colors.grey;
-      case RequestStatus.pendingUpload:
-        return Colors.orange;
-      case RequestStatus.pendingAI:
-        return Colors.blue;
-      case RequestStatus.approved:
-        return Colors.green;
-      case RequestStatus.needsModeration:
-        return Colors.orange;
-      case RequestStatus.rejected:
-        return Colors.red;
-      case RequestStatus.failed:
-        return Colors.red;
-    }
-  }
+  @override
+  Widget build(BuildContext context) {
+    final style = StatusStyle.of(request.status);
+    final problems = request.userProblems.map(problemLabel).join(', ');
+    final date = request.createdAt;
+    final dateStr =
+        '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year} '
+        '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
 
-  String _problemLabel(ProblemType type) {
-    switch (type) {
-      case ProblemType.dry:
-        return 'Сухое';
-      case ProblemType.damagedTrunk:
-        return 'Повреждён ствол';
-      case ProblemType.brokenBranches:
-        return 'Сломанные ветви';
-      case ProblemType.leaning:
-        return 'Наклон';
-      case ProblemType.diseased:
-        return 'Болезни';
-      case ProblemType.other:
-        return 'Другое';
-    }
+    return Material(
+      color: AppColors.birchCard,
+      borderRadius: BorderRadius.circular(AppRadii.md),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppRadii.md),
+        onTap: () => context.push('/history/request/${request.id}'),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppRadii.md),
+            border: Border.all(color: AppColors.divider),
+          ),
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(AppRadii.sm),
+                child: request.localPhotoPath.isNotEmpty
+                    ? Image.file(
+                        File(request.localPhotoPath),
+                        width: 64,
+                        height: 64,
+                        fit: BoxFit.cover,
+                      )
+                    : Container(
+                        width: 64,
+                        height: 64,
+                        color: AppColors.divider,
+                        child: const Icon(Icons.park_outlined,
+                            color: AppColors.inkFaint),
+                      ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      problems.isEmpty ? 'Без описания' : problems,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleMedium
+                          ?.copyWith(fontSize: 15),
+                    ),
+                    const SizedBox(height: 8),
+                    SpecimenTag(
+                      label: style.label,
+                      icon: style.icon,
+                      foreground: style.fg,
+                      background: style.bg,
+                      dense: true,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(dateStr, style: AppTypography.mono(size: 11)),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right_rounded, color: AppColors.inkFaint),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

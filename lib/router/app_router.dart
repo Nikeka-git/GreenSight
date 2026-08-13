@@ -4,9 +4,10 @@ import '../features/camera/camera_screen.dart';
 import '../features/history/my_requests_screen.dart';
 import '../features/request_detail/request_detail_screen.dart';
 import '../features/splash/splash_screen.dart';
+import '../core/theme/app_theme.dart';
 
 final router = GoRouter(
-  initialLocation: '/splash', // <-- меняем
+  initialLocation: '/splash',
   routes: [
     GoRoute(
       path: '/splash',
@@ -54,33 +55,104 @@ class ScaffoldWithNavBar extends StatefulWidget {
 class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar> {
   int _currentIndex = 0;
 
+  void _onTap(int index) {
+    setState(() => _currentIndex = index);
+    if (index == 0) {
+      context.go('/camera');
+    } else {
+      context.go('/history');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: widget.child,
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-          // Используем context из build
-          if (index == 0) {
-            context.go('/camera');
-          } else {
-            context.go('/history');
-          }
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.camera_alt),
-            label: 'Камера',
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: AppColors.birchCard,
+            borderRadius: BorderRadius.circular(AppRadii.lg),
+            border: Border.all(color: AppColors.divider),
+            boxShadow: const [
+              BoxShadow(color: AppColors.shadow, blurRadius: 16, offset: Offset(0, 6)),
+            ],
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.history),
-            label: 'История',
+          child: Row(
+            children: [
+              Expanded(
+                child: _NavTab(
+                  label: 'Камера',
+                  icon: Icons.camera_alt_outlined,
+                  selectedIcon: Icons.camera_alt_rounded,
+                  selected: _currentIndex == 0,
+                  onTap: () => _onTap(0),
+                ),
+              ),
+              Expanded(
+                child: _NavTab(
+                  label: 'История',
+                  icon: Icons.history_rounded,
+                  selectedIcon: Icons.history_rounded,
+                  selected: _currentIndex == 1,
+                  onTap: () => _onTap(1),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
+      ),
+    );
+  }
+}
+
+class _NavTab extends StatelessWidget {
+  const _NavTab({
+    required this.label,
+    required this.icon,
+    required this.selectedIcon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final IconData selectedIcon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(AppRadii.lg),
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.canopy : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppRadii.lg),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              selected ? selectedIcon : icon,
+              size: 22,
+              color: selected ? AppColors.birch : AppColors.inkMuted,
+            ),
+            const SizedBox(height: 3),
+            Text(
+              label,
+              style: AppTypography.textTheme.labelSmall?.copyWith(
+                color: selected ? AppColors.birch : AppColors.inkMuted,
+                letterSpacing: 0.2,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

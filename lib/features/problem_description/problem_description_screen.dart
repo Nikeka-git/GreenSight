@@ -4,6 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/enums/domain_enums.dart';
 import '../../domain/usecases/create_work_request_use_case.dart';
 import '../../providers/providers.dart';
+import '../../core/theme/app_theme.dart';
+import '../../core/widgets/decor.dart';
+import '../../core/widgets/status_style.dart';
 
 class ProblemDescriptionScreen extends ConsumerStatefulWidget {
   final File photoFile;
@@ -68,14 +71,13 @@ class _ProblemDescriptionScreenState
         userId: userId,
       );
 
-      // Запускаем синхронизацию
       ref.read(syncServiceProvider).syncNow();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Заявка сохранена и отправлена в обработку'),
-            backgroundColor: Colors.green,
+            backgroundColor: AppColors.canopy,
           ),
         );
         Navigator.popUntil(context, (route) => route.isFirst);
@@ -83,10 +85,7 @@ class _ProblemDescriptionScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Ошибка: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Ошибка: $e'), backgroundColor: AppColors.rust),
         );
       }
     } finally {
@@ -97,117 +96,175 @@ class _ProblemDescriptionScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Описание проблемы'),
-        backgroundColor: Colors.green,
-        foregroundColor: Colors.white,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      appBar: AppBar(title: const Text('Описание проблемы')),
+      body: SafeArea(
         child: Column(
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.file(
-                widget.photoFile,
-                height: 180,
-                width: double.infinity,
-                fit: BoxFit.cover,
-              ),
-            ),
-            const SizedBox(height: 16),
             Expanded(
               child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Выберите проблемы:',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
+                    _PhotoTag(photoFile: widget.photoFile),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Icon(Icons.place_outlined,
+                            size: 14, color: AppColors.inkFaint),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${widget.latitude.toStringAsFixed(5)}, '
+                          '${widget.longitude.toStringAsFixed(5)}',
+                          style: AppTypography.mono(size: 11),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 28),
+                    const SectionLabel('Что не так с деревом?'),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: _selectedProblems.keys.map((type) {
+                        final selected = _selectedProblems[type]!;
+                        return _ProblemChip(
+                          label: problemLabel(type),
+                          icon: problemIcon(type),
+                          selected: selected,
+                          onTap: () => setState(
+                            () => _selectedProblems[type] = !selected,
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 28),
+                    const SectionLabel('Комментарий (необязательно)'),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _commentController,
+                      maxLines: 4,
+                      style: AppTypography.textTheme.bodyLarge,
+                      decoration: const InputDecoration(
+                        hintText:
+                            'Например: ветка нависает над детской площадкой…',
                       ),
                     ),
                     const SizedBox(height: 8),
-                    ..._selectedProblems.keys.map((type) {
-                      return CheckboxListTile(
-                        title: Text(_problemLabel(type)),
-                        value: _selectedProblems[type],
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedProblems[type] = value ?? false;
-                          });
-                        },
-                        controlAffinity: ListTileControlAffinity.leading,
-                        dense: true,
-                      );
-                    }).toList(),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Комментарий (необязательно):',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    TextField(
-                      controller: _commentController,
-                      decoration: const InputDecoration(
-                        hintText: 'Опишите проблему подробнее...',
-                        border: OutlineInputBorder(),
-                      ),
-                      maxLines: 3,
-                    ),
-                    const SizedBox(height: 16),
                   ],
                 ),
               ),
             ),
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                onPressed: _isSubmitting ? null : _submit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                child: _isSubmitting
-                    ? const SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
-                    : const Text(
-                  'Отправить заявку',
-                  style: TextStyle(fontSize: 18),
+            Container(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+              decoration: BoxDecoration(
+                color: AppColors.birch,
+                border: Border(top: BorderSide(color: AppColors.divider)),
+              ),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _isSubmitting ? null : _submit,
+                  child: _isSubmitting
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.4,
+                            color: AppColors.birch,
+                          ),
+                        )
+                      : const Text('Отправить заявку'),
                 ),
               ),
             ),
-            const SizedBox(height: 8),
           ],
         ),
       ),
     );
   }
+}
 
-  String _problemLabel(ProblemType type) {
-    switch (type) {
-      case ProblemType.dry:
-        return 'Сухое дерево';
-      case ProblemType.damagedTrunk:
-        return 'Повреждён ствол';
-      case ProblemType.brokenBranches:
-        return 'Сломанные или опасно нависающие ветви';
-      case ProblemType.leaning:
-        return 'Наклоненное дерево';
-      case ProblemType.diseased:
-        return 'Признаки заболеваний или усыхания';
-      case ProblemType.other:
-        return 'Другое (укажите в комментарии)';
-    }
+class _PhotoTag extends StatelessWidget {
+  const _PhotoTag({required this.photoFile});
+  final File photoFile;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(AppRadii.md),
+      child: Stack(
+        children: [
+          Image.file(
+            photoFile,
+            height: 210,
+            width: double.infinity,
+            fit: BoxFit.cover,
+          ),
+          Positioned(
+            left: 12,
+            top: 12,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(AppRadii.pill),
+              ),
+              child: Text(
+                'НОВЫЙ СНИМОК',
+                style: AppTypography.mono(size: 10, color: Colors.white, weight: FontWeight.w700),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProblemChip extends StatelessWidget {
+  const _ProblemChip({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(AppRadii.pill),
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.canopy : AppColors.birchCard,
+          borderRadius: BorderRadius.circular(AppRadii.pill),
+          border: Border.all(
+            color: selected ? AppColors.canopy : AppColors.divider,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 16, color: selected ? AppColors.birch : AppColors.inkMuted),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: AppTypography.textTheme.bodyMedium?.copyWith(
+                color: selected ? AppColors.birch : AppColors.ink,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
