@@ -18,7 +18,7 @@ class MyRequestsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Мои заявки'),
+        title: Text('Мои заявки', style: AppTypography.strictTextTheme.headlineSmall),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
@@ -75,12 +75,12 @@ class _EmptyState extends StatelessWidget {
           children: [
             const TreeMark(size: 72, color: AppColors.inkFaint, strokeWidth: 2.2),
             const SizedBox(height: 20),
-            Text('Заявок пока нет', style: Theme.of(context).textTheme.headlineSmall),
+            Text('Заявок пока нет', style: AppTypography.strictTextTheme.headlineSmall),
             const SizedBox(height: 8),
             Text(
               'Сфотографируйте дерево на вкладке «Камера» —\nоно появится здесь',
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium,
+              style: AppTypography.strictTextTheme.bodyMedium,
             ),
           ],
         ),
@@ -143,9 +143,7 @@ class _RequestCard extends StatelessWidget {
                       problems.isEmpty ? 'Без описания' : problems,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium
+                      style: AppTypography.strictTextTheme.titleMedium
                           ?.copyWith(fontSize: 15),
                     ),
                     const SizedBox(height: 8),

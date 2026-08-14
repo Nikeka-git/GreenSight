@@ -96,7 +96,12 @@ class _ProblemDescriptionScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Описание проблемы')),
+      appBar: AppBar(
+        title: Text(
+          'Описание проблемы',
+          style: AppTypography.strictTextTheme.headlineSmall,
+        ),
+      ),
       body: SafeArea(
         child: Column(
           children: [
@@ -144,7 +149,7 @@ class _ProblemDescriptionScreenState
                     TextField(
                       controller: _commentController,
                       maxLines: 4,
-                      style: AppTypography.textTheme.bodyLarge,
+                      style: AppTypography.strictTextTheme.bodyLarge,
                       decoration: const InputDecoration(
                         hintText:
                             'Например: ветка нависает над детской площадкой…',
@@ -174,7 +179,11 @@ class _ProblemDescriptionScreenState
                             color: AppColors.birch,
                           ),
                         )
-                      : const Text('Отправить заявку'),
+                      : Text(
+                          'Отправить заявку',
+                          style: AppTypography.strictTextTheme.labelLarge
+                              ?.copyWith(color: AppColors.birch),
+                        ),
                 ),
               ),
             ),
@@ -257,7 +266,7 @@ class _ProblemChip extends StatelessWidget {
             const SizedBox(width: 6),
             Text(
               label,
-              style: AppTypography.textTheme.bodyMedium?.copyWith(
+              style: AppTypography.strictTextTheme.bodyMedium?.copyWith(
                 color: selected ? AppColors.birch : AppColors.ink,
                 fontWeight: FontWeight.w600,
               ),

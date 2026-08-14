@@ -52,53 +52,97 @@ class AppTypography {
   /// как в старых определителях растений. Используется скупо: только
   /// заголовки и крупные акценты, не для длинного текста.
   static TextTheme get textTheme => TextTheme(
-        displaySmall: GoogleFonts.fraunces(
-          fontSize: 30,
-          fontWeight: FontWeight.w600,
-          fontStyle: FontStyle.italic,
-          color: AppColors.ink,
-          height: 1.15,
-        ),
-        headlineMedium: GoogleFonts.fraunces(
-          fontSize: 24,
-          fontWeight: FontWeight.w600,
-          color: AppColors.ink,
-          height: 1.2,
-        ),
-        headlineSmall: GoogleFonts.fraunces(
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-          color: AppColors.ink,
-        ),
-        titleMedium: GoogleFonts.manrope(
-          fontSize: 16,
-          fontWeight: FontWeight.w700,
-          color: AppColors.ink,
-        ),
-        bodyLarge: GoogleFonts.manrope(
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
-          color: AppColors.ink,
-          height: 1.4,
-        ),
-        bodyMedium: GoogleFonts.manrope(
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-          color: AppColors.inkMuted,
-          height: 1.4,
-        ),
-        labelLarge: GoogleFonts.manrope(
-          fontSize: 15,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.2,
-        ),
-        labelSmall: GoogleFonts.jetBrainsMono(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 0.6,
-          color: AppColors.inkMuted,
-        ),
-      );
+    displaySmall: GoogleFonts.fraunces(
+      fontSize: 30,
+      fontWeight: FontWeight.w600,
+      fontStyle: FontStyle.italic,
+      color: AppColors.ink,
+      height: 1.15,
+    ),
+    headlineMedium: GoogleFonts.fraunces(
+      fontSize: 24,
+      fontWeight: FontWeight.w600,
+      color: AppColors.ink,
+      height: 1.2,
+    ),
+    headlineSmall: GoogleFonts.fraunces(
+      fontSize: 20,
+      fontWeight: FontWeight.w600,
+      color: AppColors.ink,
+    ),
+    titleMedium: GoogleFonts.manrope(
+      fontSize: 16,
+      fontWeight: FontWeight.w700,
+      color: AppColors.ink,
+    ),
+    bodyLarge: GoogleFonts.manrope(
+      fontSize: 16,
+      fontWeight: FontWeight.w500,
+      color: AppColors.ink,
+      height: 1.4,
+    ),
+    bodyMedium: GoogleFonts.manrope(
+      fontSize: 14,
+      fontWeight: FontWeight.w500,
+      color: AppColors.inkMuted,
+      height: 1.4,
+    ),
+    labelLarge: GoogleFonts.manrope(
+      fontSize: 15,
+      fontWeight: FontWeight.w700,
+      letterSpacing: 0.2,
+    ),
+    labelSmall: GoogleFonts.jetBrainsMono(
+      fontSize: 11,
+      fontWeight: FontWeight.w600,
+      letterSpacing: 0.6,
+      color: AppColors.inkMuted,
+    ),
+  );
+
+  /// Более строгий, официальный набор стилей — без курсивной Fraunces и
+  /// "дружелюбного" Manrope. Используется точечно (сейчас — экраны подачи
+  /// заявки и списка заявок), через прямые ссылки на стили ниже, а не
+  /// через Theme.of(context), чтобы не менять внешний вид остальных экранов.
+  ///
+  /// Шрифт: Inter — нейтральный, строгий, одинаково доступен через
+  /// Google Fonts на всех платформах (в отличие от San Francisco, который
+  /// проприетарен и физически есть только на устройствах Apple).
+  static TextTheme get strictTextTheme => TextTheme(
+    headlineMedium: GoogleFonts.inter(
+      fontSize: 24,
+      fontWeight: FontWeight.w600,
+      color: AppColors.ink,
+      height: 1.25,
+    ),
+    headlineSmall: GoogleFonts.inter(
+      fontSize: 19,
+      fontWeight: FontWeight.w600,
+      color: AppColors.ink,
+    ),
+    titleMedium: GoogleFonts.inter(
+      fontSize: 15,
+      fontWeight: FontWeight.w600,
+      color: AppColors.ink,
+    ),
+    bodyLarge: GoogleFonts.inter(
+      fontSize: 16,
+      fontWeight: FontWeight.w400,
+      color: AppColors.ink,
+      height: 1.4,
+    ),
+    bodyMedium: GoogleFonts.inter(
+      fontSize: 14,
+      fontWeight: FontWeight.w400,
+      color: AppColors.inkMuted,
+      height: 1.4,
+    ),
+    labelLarge: GoogleFonts.inter(
+      fontSize: 15,
+      fontWeight: FontWeight.w600,
+      letterSpacing: 0.1,
+    ),
+  );
 
   /// Моноширинный — для координат, id заявок, дат осмотра: подчёркивает
   /// "полевой протокол", ощущение точных данных наблюдения.
@@ -197,7 +241,7 @@ class AppTheme {
         filled: true,
         fillColor: AppColors.birchCard,
         contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadii.sm),
           borderSide: const BorderSide(color: AppColors.divider),
