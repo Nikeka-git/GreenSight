@@ -1,0 +1,12 @@
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/app_icon.png"
+  min_sdk_android: 21
+  # Ниже — отдельная адаптивная иконка для Android 8+: она обрезается в
+  # круг/квадрат/каплю в зависимости от лаунчера, поэтому фон и передний
+  # план разделены. Ваш логотип уже "full-bleed" (заливает весь квадрат),
+  # так что можно смело переиспользовать его же как фон.
+  adaptive_icon_background: "#8FD3A6"
+  adaptive_icon_foreground: "assets/icon/app_icon.png"
+  remove_alpha_ios: true
